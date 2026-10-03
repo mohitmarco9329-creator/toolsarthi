@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Convert PDF pages into JPG images online with ToolSarthi.">
+  <meta name="robots" content="index, follow">
+  <title>PDF to JPG Converter Free Online | ToolSarthi</title>
+  <link rel="canonical" href="https://mohitmarco9329-creator.github.io/toolsarthi/pdf-to-jpg/">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(120deg, #1457d9, #6539c7);
+      color: white;
+      text-align: center;
+      padding: 22px 12px;
+    }
+    header h1 { margin: 0; font-size: 28px; }
+    header a { color: white; text-decoration: none; }
+    main { width: 92%; max-width: 760px; margin: 24px auto; }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.06);
+    }
+    .upload {
+      display: block;
+      padding: 22px 12px;
+      text-align: center;
+      border: 2px dashed #8aa8e0;
+      border-radius: 12px;
+      background: #f8faff;
+    }
+    input[type=file] { display: block; width: 100%; margin-top: 14px; }
+    button, .download {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-radius: 9px;
+      padding: 14px;
+      margin-top: 14px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button { background: #1457d9; color: white; }
+    button:disabled { background: #aab4c5; cursor: not-allowed; }
+    .download { background: #138447; color: white; }
+    [hidden] { display: none !important; }
+    #status { overflow-wrap: anywhere; font-size: 14px; }
+    #results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .item { min-width: 0; border: 1px solid #e0e6ef; border-radius: 10px; padding: 8px; }
+    .item img { display: block; width: 100%; height: 150px; object-fit: contain; background: #f4f7fb; }
+    .item a { display: block; overflow-wrap: anywhere; font-size: 13px; margin-top: 8px; }
+    .note { font-size: 13px; color: #606b7b; }
+    footer { text-align: center; padding: 22px 12px; color: #606b7b; }
+    footer a { color: #1457d9; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="../">ToolSarthi</a></h1>
+    <p>Free Online PDF to JPG Converter</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Convert PDF Pages to JPG</h2>
+      <p>Select a PDF to convert each page into a JPG image.</p>
+
+      <label class="upload" for="pdfFile">
+        <strong>Select PDF File</strong>
+        <input id="pdfFile" type="file" accept="application/pdf,.pdf">
+      </label>
+
+      <p id="status" role="status" aria-live="polite">Choose a PDF file to begin.</p>
+
+      <button id="convertBtn" type="button" disabled>Convert PDF to JPG</button>
+      <div id="results"></div>
+
+      <p class="note">Conversion runs in your browser. Large PDFs may take some time.</p>
+    </section>
+
+    <section class="card">
+      <h2>How to Convert PDF to JPG</h2>
+      <ol>
+        <li>Select a PDF file from your device.</li>
+        <li>Tap Convert PDF to JPG.</li>
+        <li>Download each page as a JPG image.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Frequently Asked Questions</h2>
+      <h3>Is this tool free?</h3>
+      <p>Yes, no account is required.</p>
+      <h3>Will every PDF page be converted?</h3>
+      <p>Yes, the tool creates a separate JPG image for each page, subject to your device's available memory.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="../">Home</a> |
+    <a href="../compress-pdf/">Compress PDF</a> |
+    <a href="../merge-pdf/">Merge PDF</a> |
+    <a href="../image-to-pdf/">Image to PDF</a>
+    <p>© 2026 ToolSarthi</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const pdfFile = document.getElementById("pdfFile");
+    const convertBtn = document.getElementById("convertBtn");
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    pdfFile.addEventListener("change", () => {
+      results.replaceChildren();
+      convertBtn.disabled = !pdfFile.files.length;
+      status.textContent = pdfFile.files.length
+        ? "Selected: " + pdfFile.files[0].name
+        : "Choose a PDF file to begin.";
+    });
+
+    convertBtn.addEventListener("click", async () => {
+      const file = pdfFile.files[0];
+      if (!file) return;
+
+      if (!window.pdfjsLib) {
+        status.textContent = "PDF library could not load. Check your internet and refresh.";
+        return;
+      }
+
+      convertBtn.disabled = true;
+      results.replaceChildren();
+
+      try {
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+        for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+          status.textContent = "Converting page " + pageNo + " of " + pdf.numPages + "...";
+
+          const page = await pdf.getPage(pageNo);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = Math.ceil(viewport.width);
+          canvas.height = Math.ceil(viewport.height);
+
+          await page.render({ canvasContext: context, viewport }).promise;
+
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob(result => {
+              if (result) resolve(result);
+              else reject(new Error("Could not create JPG image."));
+            }, "image/jpeg", 0.92);
+          });
+
+          const url = URL.createObjectURL(blob);
+          const item = document.createElement("div");
+          item.className = "item";
+
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "PDF page " + pageNo;
+
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "page-" + pageNo + ".jpg";
+          link.textContent = "Download Page " + pageNo + " JPG";
+
+          item.append(img, link);
+          results.appendChild(item);
+          page.cleanup();
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+
+        status.textContent = "Done! " + pdf.numPages + " page(s) converted. Tap each Download link.";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Conversion failed. Please check that the PDF is valid and try again.";
+      } finally {
+        convertBtn.disabled = !pdfFile.files.length;
+      }
+    });
+  </script>
+</body>
+          </html>
+          
