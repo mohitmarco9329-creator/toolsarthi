@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Splitter - ToolSarthi</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;padding:20px;color:#222}
+.container{max-width:650px;margin:30px auto;background:white;padding:25px;border-radius:14px;box-shadow:0 4px 18px #0001}
+h1{color:#2563eb}
+input,button{width:100%;padding:13px;margin-top:15px;box-sizing:border-box}
+button{background:#2563eb;color:white;border:0;border-radius:7px;font-size:16px;cursor:pointer}
+button:disabled{opacity:.5}
+#status{margin-top:15px;overflow-wrap:anywhere}
+a{display:inline-block;margin-top:12px;color:#2563eb}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>PDF Splitter</h1>
+<p>PDF के पेज चुनें और उन्हें अलग PDF फ़ाइल में डाउनलोड करें।</p>
+<input type="file" id="pdfFile" accept="application/pdf">
+<label for="pageNumber">जिस पेज को निकालना है उसका नंबर लिखें:</label>
+<input type="number" id="pageNumber" min="1" value="1">
+<button id="splitBtn">Extract Page & Download PDF</button>
+<div id="status" role="status"></div>
+<div id="result"></div>
+<p><a href="../">← Back to ToolSarthi Home</a></p>
+</div>
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+const fileInput = document.getElementById('pdfFile');
+const pageInput = document.getElementById('pageNumber');
+const button = document.getElementById('splitBtn');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+
+button.addEventListener('click', async () => {
+  const file = fileInput.files[0];
+  const pageNumber = Number(pageInput.value);
+  result.innerHTML = '';
+
+  if (!file) {
+    status.textContent = 'Please select a PDF file first.';
+    return;
+  }
+
+  button.disabled = true;
+  status.textContent = 'Processing PDF...';
+
+  try {
+    const sourceBytes = await file.arrayBuffer();
+    const sourcePdf = await PDFLib.PDFDocument.load(sourceBytes);
+    const totalPages = sourcePdf.getPageCount();
+
+    if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+      throw new Error('इस PDF में कुल ' + totalPages + ' पेज हैं। सही पेज नंबर लिखें।');
+    }
+
+    const newPdf = await PDFLib.PDFDocument.create();
+    const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageNumber - 1]);
+    newPdf.addPage(copiedPage);
+
+    const outputBytes = await newPdf.save();
+    const blob = new Blob([outputBytes], {type: 'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'split-page-' + pageNumber + '.pdf';
+    link.textContent = 'Download Extracted Page PDF';
+    result.appendChild(link);
+    status.textContent = 'Done! Your page is ready to download.';
+  } catch (error) {
+    status.textContent = error.message || 'PDF process nahi ho paya. Dusri PDF try karein.';
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
