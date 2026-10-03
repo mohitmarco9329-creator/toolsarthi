@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Convert multiple JPG, PNG and WebP images to PDF online for free with ToolSarthi.">
+  <meta name="robots" content="index, follow">
+  <title>Image to PDF Converter Online Free | ToolSarthi</title>
+  <link rel="canonical" href="https://mohitmarco9329-creator.github.io/toolsarthi/image-to-pdf/">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(120deg, #1457d9, #6539c7);
+      color: white;
+      text-align: center;
+      padding: 22px 12px;
+    }
+
+    header h1 { margin: 0; font-size: 28px; }
+    header a { color: white; text-decoration: none; }
+    header p { margin: 4px 0 0; }
+
+    main {
+      width: 92%;
+      max-width: 760px;
+      margin: 24px auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.06);
+    }
+
+    h2 { margin-top: 0; }
+
+    .upload {
+      display: block;
+      padding: 22px 12px;
+      text-align: center;
+      border: 2px dashed #8aa8e0;
+      border-radius: 12px;
+      background: #f8faff;
+    }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    button, .download {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-radius: 9px;
+      padding: 14px;
+      margin-top: 14px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button {
+      background: #1457d9;
+      color: white;
+    }
+
+    button:disabled {
+      background: #aab4c5;
+      cursor: not-allowed;
+    }
+
+    .download {
+      background: #138447;
+      color: white;
+    }
+
+    [hidden] { display: none !important; }
+
+    #status {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    #preview {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .item {
+      min-width: 0;
+      border: 1px solid #e0e6ef;
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .item img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      background: #f4f7fb;
+    }
+
+    .item p {
+      font-size: 12px;
+      overflow-wrap: anywhere;
+      margin: 8px 0;
+    }
+
+    .remove {
+      background: #d93636;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .note {
+      font-size: 13px;
+      color: #606b7b;
+    }
+
+    footer {
+      text-align: center;
+      padding: 22px 12px;
+      color: #606b7b;
+    }
+
+    footer a {
+      color: #1457d9;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1><a href="../">ToolSarthi</a></h1>
+    <p>Free Online Image to PDF Converter</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Image to PDF Converter</h2>
+      <p>Select multiple photos and convert them into one PDF file for free.</p>
+
+      <label class="upload" for="imageFiles">
+        <strong>Select Images from Your Phone</strong>
+        <input
+          id="imageFiles"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+        >
+      </label>
+
+      <p id="status" role="status" aria-live="polite">
+        Please select one or more images.
+      </p>
+
+      <div id="preview"></div>
+
+      <button id="convertBtn" type="button" disabled>
+        Convert Images to PDF
+      </button>
+
+      <a id="downloadBtn" class="download" hidden
+         download="toolsarthi-images.pdf">
+        Download PDF
+      </a>
+
+      <p class="note">
+        Privacy: Your images are processed in your browser and are not uploaded to our server.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>How to Convert Images to PDF</h2>
+      <ol>
+        <li>Select photos from your phone.</li>
+        <li>Check the selected images.</li>
+        <li>Tap Convert Images to PDF.</li>
+        <li>Tap Download PDF to save your file.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Frequently Asked Questions</h2>
+
+      <h3>Is this tool free?</h3>
+      <p>Yes, you can use this tool without creating an account.</p>
+
+      <h3>Can I convert multiple images?</h3>
+      <p>Yes, each selected image will appear on a separate PDF page.</p>
+
+      <h3>Are my images uploaded to a server?</h3>
+      <p>No. Image processing takes place locally in your browser.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="../">Home</a> |
+    <a href="../compress-pdf/">Compress PDF</a> |
+    <a href="../merge-pdf/">Merge PDF</a>
+    <p>© 2026 ToolSarthi</p>
+  </footer>
+
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <script>
+    const imageFiles = document.getElementById("imageFiles");
+    const convertBtn = document.getElementById("convertBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const status = document.getElementById("status");
+    const preview = document.getElementById("preview");
+
+    let selectedImages = [];
+    let pdfUrl = null;
+    let busy = false;
+
+    imageFiles.addEventListener("change", () => {
+      selectedImages = Array.from(imageFiles.files);
+      downloadBtn.hidden = true;
+
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        pdfUrl = null;
+      }
+
+      renderPreview();
+    });
+
+    function renderPreview() {
+      preview.replaceChildren();
+
+      selectedImages.forEach((file, index) => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const img = document.createElement("img");
+        img.alt = file.name;
+        img.src = URL.createObjectURL(file);
+
+        const name = document.createElement("p");
+        name.textContent = (index + 1) + ". " + file.name;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "remove";
+        removeBtn.type = "button";
+        removeBtn.textContent = "Remove";
+
+        removeBtn.addEventListener("click", () => {
+          selectedImages.splice(index, 1);
+
+          const transfer = new DataTransfer();
+          selectedImages.forEach(f => transfer.items.add(f));
+          imageFiles.files = transfer.files;
+
+          renderPreview();
+        });
+
+        item.append(img, name, removeBtn);
+        preview.appendChild(item);
+      });
+
+      convertBtn.disabled = selectedImages.length === 0 || busy;
+
+      status.textContent = selectedImages.length
+        ? selectedImages.length + " image(s) selected."
+        : "Please select one or more images.";
+    }
+
+    async function imageToBytes(file) {
+      const bitmap = await createImageBitmap(file);
+
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(bitmap, 0, 0);
+
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(result => {
+            if (result) resolve(result);
+            else reject(new Error("Could not process image."));
+          }, "image/png");
+        });
+
+        return {
+          bytes: await blob.arrayBuffer(),
+          width: bitmap.width,
+          height: bitmap.height
+        };
+      } finally {
+        bitmap.close();
+      }
+    }
+
+    convertBtn.addEventListener("click", async () => {
+      if (busy || selectedImages.length === 0) return;
+
+      if (!window.PDFLib) {
+        status.textContent =
+          "PDF library could not load. Check your internet connection and refresh.";
+        return;
+      }
+
+      busy = true;
+      convertBtn.disabled = true;
+      downloadBtn.hidden = true;
+      status.textContent = "Creating your PDF. Please wait...";
+
+      try {
+        const pdfDoc = await PDFLib.PDFDocument.create();
+
+        for (let i = 0; i < selectedImages.length; i++) {
+          const file = selectedImages[i];
+
+          status.textContent =
+            "Processing image " + (i + 1) + " of " +
+            selectedImages.length + "...";
+
+          const image = await imageToBytes(file);
+          const embedded = await pdfDoc.embedPng(image.bytes);
+
+          const page = pdfDoc.addPage([
+            image.width,
+            image.height
+          ]);
+
+          page.drawImage(embedded, {
+            x: 0,
+            y: 0,
+            width: image.width,
+            height: image.height
+          });
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], {
+          type: "application/pdf"
+        });
+
+        if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+
+        pdfUrl = URL.createObjectURL(blob);
+        downloadBtn.href = pdfUrl;
+        downloadBtn.hidden = false;
+        status.textContent =
+          "Success! Your PDF is ready to download.";
+
+      } catch (error) {
+        console.error(error);
+        status.textContent =
+          "Could not create PDF. Try another JPG or PNG image.";
+      } finally {
+        busy = false;
+        convertBtn.disabled = selectedImages.length === 0;
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    });
+  </script>
+</body>
+  </html>
+  
