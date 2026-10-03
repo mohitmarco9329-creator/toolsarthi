@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to Word - ToolSarthi</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 15px;
+      margin: 20px 0;
+      border: 2px dashed #bbb;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+
+    button {
+      border: none;
+      background: #2563eb;
+      color: white;
+      padding: 14px 25px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+
+      <h1>📄 PDF to Word</h1>
+
+      <p>Convert your PDF file into an editable Word document.</p>
+
+      <input type="file" id="pdfFile" accept=".pdf">
+
+      <button id="convertBtn">
+        Convert to Word
+      </button>
+
+      <div id="status"></div>
+
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("pdfFile");
+    const convertBtn = document.getElementById("convertBtn");
+    const status = document.getElementById("status");
+
+    convertBtn.addEventListener("click",
