@@ -262,4 +262,62 @@ The files are processed directly in your browser.
 They are not intentionally uploaded to our server.
 </p>
 
-</
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+const pdfFiles = document.getElementById("pdfFiles");
+const mergeBtn = document.getElementById("mergeBtn");
+const status = document.getElementById("status");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let mergedUrl = null;
+
+pdfFiles.addEventListener("change", () => {
+  mergeBtn.disabled = pdfFiles.files.length < 2;
+  status.textContent = pdfFiles.files.length < 2
+    ? "Please select at least 2 PDF files."
+    : pdfFiles.files.length + " PDF files selected.";
+});
+
+mergeBtn.addEventListener("click", async () => {
+  if (pdfFiles.files.length < 2) return;
+
+  mergeBtn.disabled = true;
+  status.textContent = "Merging PDFs...";
+
+  try {
+    const { PDFDocument } = PDFLib;
+    const mergedPdf = await PDFDocument.create();
+
+    for (const file of pdfFiles.files) {
+      const bytes = await file.arrayBuffer();
+      const pdf = await PDFDocument.load(bytes);
+      const pages = await mergedPdf.copyPages(
+        pdf,
+        pdf.getPageIndices()
+      );
+      pages.forEach(page => mergedPdf.addPage(page));
+    }
+
+    const mergedBytes = await mergedPdf.save();
+    const blob = new Blob([mergedBytes], {
+      type: "application/pdf"
+    });
+
+    if (mergedUrl) URL.revokeObjectURL(mergedUrl);
+    mergedUrl = URL.createObjectURL(blob);
+
+    downloadBtn.href = mergedUrl;
+    downloadBtn.style.display = "inline-block";
+    status.textContent = "PDFs merged successfully!";
+  } catch (error) {
+    console.error(error);
+    status.textContent =
+      "Merge failed. Please check that both files are valid PDFs.";
+  } finally {
+    mergeBtn.disabled = pdfFiles.files.length < 2;
+  }
+});
+</script>
+    
+</body>
+</html>
