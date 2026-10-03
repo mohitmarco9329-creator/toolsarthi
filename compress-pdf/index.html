@@ -297,21 +297,81 @@
 
 <script>
 
-    const pdfFile = document.getElementById("pdfFile");
-    const compressBtn = document.getElementById("compressBtn");
-    const status = document.getElementById("status");
-    const downloadBtn = document.getElementById("downloadBtn");
+const pdfFile = document.getElementById("pdfFile");
+const compressBtn = document.getElementById("compressBtn");
+const status = document.getElementById("status");
+const downloadBtn = document.getElementById("downloadBtn");
 
-    let selectedFile = null;
+let selectedFile = null;
 
+pdfFile.addEventListener("change", function () {
 
-    pdfFile.addEventListener("change", function () {
+    selectedFile = this.files[0];
 
-        selectedFile = this.files[0];
+    downloadBtn.style.display = "none";
+    downloadBtn.removeAttribute("href");
+    status.textContent = "";
 
-        downloadBtn.style.display = "none";
-        status.textContent = "";
+    if (selectedFile && selectedFile.type === "application/pdf") {
 
-        if (!selectedFile) {
+        compressBtn.disabled = false;
+        status.textContent = "PDF selected: " + selectedFile.name;
 
-            compressBtn.disabled = true
+    } else {
+
+        selectedFile = null;
+        compressBtn.disabled = true;
+        status.textContent = "Please select a valid PDF file.";
+
+    }
+
+});
+
+compressBtn.addEventListener("click", async function () {
+
+    if (!selectedFile) {
+        return;
+    }
+
+    compressBtn.disabled = true;
+    status.textContent = "Compressing PDF...";
+
+    try {
+
+        const arrayBuffer = await selectedFile.arrayBuffer();
+
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+
+        const compressedPdf = await pdfDoc.save({
+            useObjectStreams: true,
+            addDefaultPage: false
+        });
+
+        const blob = new Blob(
+            [compressedPdf],
+            { type: "application/pdf" }
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        downloadBtn.href = url;
+        downloadBtn.style.display = "inline-block";
+
+        status.textContent = "Compression completed successfully!";
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Sorry, this PDF could not be processed.";
+
+    } finally {
+
+        compressBtn.disabled = false;
+
+    }
+
+});
+
+    </script>
