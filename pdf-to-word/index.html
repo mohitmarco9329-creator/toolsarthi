@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>PDF to Word - ToolSarthi</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 
   <style>
     * {
@@ -25,24 +29,26 @@
 
     .card {
       background: white;
-      padding: 30px;
-      border-radius: 18px;
+      padding: 35px 25px;
+      border-radius: 20px;
       box-shadow: 0 5px 25px rgba(0,0,0,0.08);
       text-align: center;
     }
 
     h1 {
+      font-size: 34px;
       margin-bottom: 10px;
     }
 
     p {
       color: #666;
+      line-height: 1.5;
     }
 
     input[type="file"] {
       width: 100%;
       padding: 15px;
-      margin: 20px 0;
+      margin: 25px 0;
       border: 2px dashed #bbb;
       border-radius: 12px;
       background: #fafafa;
@@ -52,47 +58,180 @@
       border: none;
       background: #2563eb;
       color: white;
-      padding: 14px 25px;
+      padding: 15px 28px;
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 17px;
       cursor: pointer;
     }
 
     button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
+      background: #999;
     }
 
     #status {
       margin-top: 20px;
       font-weight: bold;
+      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <div class="card">
+<div class="container">
+  <div class="card">
 
-      <h1>📄 PDF to Word</h1>
+    <h1>📄 PDF to Word</h1>
 
-      <p>Convert your PDF file into an editable Word document.</p>
+    <p>
+      Convert your PDF text into an editable Word document.
+    </p>
 
-      <input type="file" id="pdfFile" accept=".pdf">
+    <input
+      type="file"
+      id="pdfFile"
+      accept=".pdf,application/pdf"
+    >
 
-      <button id="convertBtn">
-        Convert to Word
-      </button>
+    <button id="convertBtn">
+      Convert to Word
+    </button>
 
-      <div id="status"></div>
+    <div id="status"></div>
 
-    </div>
   </div>
+</div>
 
-  <script>
-    const fileInput = document.getElementById("pdfFile");
-    const convertBtn = document.getElementById("convertBtn");
-    const status = document.getElementById("status");
+<script>
 
-    convertBtn.addEventListener("click",
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const fileInput = document.getElementById("pdfFile");
+  const convertBtn = document.getElementById("convertBtn");
+  const status = document.getElementById("status");
+
+  convertBtn.addEventListener("click", async function () {
+
+    const file = fileInput.files[0];
+
+    if (!file) {
+      status.textContent = "❌ Please select a PDF file first.";
+      return;
+    }
+
+    convertBtn.disabled = true;
+    status.textContent = "⏳ Reading PDF...";
+
+    try {
+
+      const arrayBuffer = await file.arrayBuffer();
+
+      const pdf = await pdfjsLib.getDocument({
+        data: arrayBuffer
+      }).promise;
+
+      const paragraphs = [];
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+
+        status.textContent =
+          "⏳ Processing page " +
+          pageNumber +
+          " of " +
+          pdf.numPages +
+          "...";
+
+        const page = await pdf.getPage(pageNumber);
+
+        const textContent = await page.getTextContent();
+
+        let pageText = "";
+
+        textContent.items.forEach(function(item) {
+          pageText += item.str + " ";
+        });
+
+        pageText = pageText.trim();
+
+        if (pageText) {
+          paragraphs.push(
+            new docx.Paragraph({
+              text: pageText,
+              spacing: {
+                after: 200
+              }
+            })
+          );
+        }
+
+        if (pageNumber < pdf.numPages) {
+          paragraphs.push(
+            new docx.Paragraph({
+              text: ""
+            })
+          );
+        }
+      }
+
+      if (paragraphs.length === 0) {
+        throw new Error(
+          "No selectable text found in this PDF."
+        );
+      }
+
+      status.textContent = "⏳ Creating Word document...";
+
+      const document = new docx.Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs
+          }
+        ]
+      });
+
+      const blob =
+        await docx.Packer.toBlob(document);
+
+      const downloadUrl =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = downloadUrl;
+
+      link.download =
+        file.name.replace(/\.pdf$/i, "") +
+        ".docx";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      URL.revokeObjectURL(downloadUrl);
+
+      status.textContent =
+        "✅ Conversion complete! Word file downloaded.";
+
+    } catch (error) {
+
+      console.error(error);
+
+      status.textContent =
+        "❌ Conversion failed: " +
+        error.message;
+
+    }
+
+    convertBtn.disabled = false;
+
+  });
+
+</script>
+
+</body>
+</html>
