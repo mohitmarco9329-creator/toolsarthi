@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PDF Lock & Unlock - ToolSarthi</title>
+<meta name="description" content="Free online PDF Lock and Unlock tool. Protect or unlock PDF files directly in your browser.">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#222;
+}
+
+header{
+  background:#2563eb;
+  color:white;
+  text-align:center;
+  padding:25px 15px;
+}
+
+header h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+header p{
+  margin:0;
+  font-size:15px;
+}
+
+.container{
+  max-width:700px;
+  margin:40px auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:30px 25px;
+  border-radius:20px;
+  box-shadow:0 5px 25px rgba(0,0,0,.08);
+  text-align:center;
+}
+
+h2{
+  margin-top:0;
+}
+
+input[type="file"],
+input[type="password"]{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+button{
+  border:0;
+  background:#2563eb;
+  color:white;
+  padding:12px 20px;
+  margin:8px 4px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+button:disabled{
+  background:#999;
+  cursor:not-allowed;
+}
+
+.mode{
+  margin:20px 0;
+}
+
+.status{
+  margin-top:15px;
+  font-weight:bold;
+  color:#2563eb;
+}
+
+.home{
+  display:inline-block;
+  margin-top:20px;
+  text-decoration:none;
+  color:#2563eb;
+}
+
+.note{
+  font-size:13px;
+  color:#666;
+  margin-top:15px;
+  line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🔐 PDF Lock & Unlock</h1>
+  <p>Protect or unlock your PDF files easily</p>
+</header>
+
+<div class="container">
+  <div class="card">
+
+    <h2>PDF Lock & Unlock</h2>
+
+    <input type="file" id="pdfFile" accept=".pdf">
+
+    <div class="mode">
+      <button id="lockBtn">🔒 Lock PDF</button>
+      <button id="unlockBtn">🔓 Unlock PDF</button>
+    </div>
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Enter PDF password"
+      autocomplete="off"
+    >
+
+    <button id="processBtn" disabled>
+      Select PDF First
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <div class="note">
+      Your PDF is processed directly in your browser.
+      The file is not uploaded to our server.
+    </div>
+
+    <a class="home" href="../index.html">← Back to ToolSarthi</a>
+
+  </div>
+</div>
+
+<script type="module">
+
+import * as pdfjsLib from
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.mjs";
+
+const { jsPDF } = window.jspdf;
+
+const fileInput = document.getElementById("pdfFile");
+const passwordInput = document.getElementById("password");
+const lockBtn = document.getElementById("lockBtn");
+const unlockBtn = document.getElementById("unlockBtn");
+const processBtn = document.getElementById("processBtn");
+const status = document.getElementById("status");
+
+let selectedMode = "";
+let selectedFile = null;
+
+fileInput.addEventListener("change", () => {
+
+  selectedFile = fileInput.files[0];
+
+  if(selectedFile){
+    processBtn.disabled = false;
+    processBtn.textContent = "Process PDF";
+    status.textContent = "PDF selected: " + selectedFile.name;
+  }
+
+});
+
+lockBtn.addEventListener("click", () => {
+
+  selectedMode = "lock";
+
+  lockBtn.style.background = "#16a34a";
+  unlockBtn.style.background = "#2563eb";
+
+  processBtn.textContent = "🔒 Lock PDF";
+
+});
+
+unlockBtn.addEventListener("click", () => {
+
+  selectedMode = "unlock";
+
+  unlockBtn.style.background = "#16a34a";
+  lockBtn.style.background = "#2563eb";
+
+  processBtn.textContent = "🔓 Unlock PDF";
+
+});
+
+processBtn.addEventListener("click", async () => {
+
+  if(!selectedFile){
+    status.textContent = "Please select a PDF file.";
+    return;
+  }
+
+  const password = passwordInput.value;
+
+  if(!password){
+    status.textContent = "Please enter the password.";
+    return;
+  }
+
+  processBtn.disabled = true;
+
+  try{
+
+    if(selectedMode === "lock"){
+      await lockPDF();
+    }
+    else if(selectedMode === "unlock"){
+      await unlockPDF();
+    }
+    else{
+      status.textContent = "Please select Lock or Unlock.";
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    if(error.name === "PasswordException"){
+      status.textContent =
+      "❌ Wrong password or password-protected PDF.";
+    }else{
+      status.textContent =
+      "❌ Something went wrong. Please try another PDF.";
+    }
+
+  }
+
+  processBtn.disabled = false;
+
+});
+
+
+async function loadPDF(password){
+
+  const data = new Uint8Array(
+    await selectedFile.arrayBuffer()
+  );
+
+  return await pdfjsLib.getDocument({
+    data:data,
+    password:password
+  }).promise;
+
+}
+
+
+async function createPDF(password, encrypt){
+
+  const pdf = await loadPDF(
+    encrypt ? undefined : password
+  );
+
+  let outputPDF = null;
+
+  for(let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++){
+
+    status.textContent =
+    "Processing page " + pageNumber +
+    " of " + pdf.numPages + "...";
+
+    const page = await pdf.getPage(pageNumber);
+
+    const viewport = page.getViewport({
+      scale:1.5
+    });
+
+    const canvas = document.createElement("canvas");
+
+    const context = canvas.getContext("2d");
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({
+      canvasContext:context,
+      viewport:viewport
+    }).promise;
+
+    const imageData = canvas.toDataURL("image/jpeg",0.92);
+
+    const orientation =
+      viewport.width > viewport.height
+      ? "landscape"
+      : "portrait";
+
+    if(!outputPDF){
+
+      const options = {
+        orientation:orientation,
+        unit:"pt",
+        format:[viewport.width,viewport.height],
+        compress:true
+      };
+
+      if(encrypt){
+
+        options.encryption = {
+          userPassword:password,
+          ownerPassword:password,
+          userPermissions:[
+            "print",
+            "copy"
+          ]
+        };
+
+      }
+
+      outputPDF = new jsPDF(options);
+
+    }else{
+
+      outputPDF.addPage(
+        [viewport.width,viewport.height],
+        orientation
+      );
+
+    }
+
+    outputPDF.addImage(
+      imageData,
+      "JPEG",
+      0,
+      0,
+      viewport.width,
+      viewport.height,
+      undefined,
+      "FAST"
+    );
+
+  }
+
+  return outputPDF;
+}
+
+
+async function lockPDF(){
+
+  if(!passwordInput.value){
+    status.textContent = "Please enter a password.";
+    return;
+  }
+
+  status.textContent = "Locking PDF...";
+
+  const outputPDF =
+    await createPDF(passwordInput.value,true);
+
+  outputPDF.save("ToolSarthi-Locked.pdf");
+
+  status.textContent =
+    "✅ PDF locked successfully!";
+}
+
+
+async function unlockPDF(){
+
+  status.textContent = "Unlocking PDF...";
+
+  const outputPDF =
+    await createPDF(passwordInput.value,false);
+
+  outputPDF.save("ToolSarthi-Unlocked.pdf");
+
+  status.textContent =
+    "✅ PDF unlocked successfully!";
+
+}
+
+</script>
+
+</body>
+      </html>
