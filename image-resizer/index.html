@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Image Resizer - ToolSarthi</title>
+<meta name="description" content="Resize images online for free with ToolSarthi. Set custom width and height directly in your browser.">
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#222;
+}
+
+header{
+  background:#2563eb;
+  color:white;
+  text-align:center;
+  padding:25px 15px;
+}
+
+header h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+header p{
+  margin:0;
+  font-size:15px;
+}
+
+.container{
+  max-width:700px;
+  margin:40px auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:30px 25px;
+  border-radius:20px;
+  box-shadow:0 5px 25px rgba(0,0,0,.08);
+  text-align:center;
+}
+
+input[type="file"],
+input[type="number"]{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+.row{
+  display:flex;
+  gap:12px;
+  margin-top:15px;
+}
+
+.field{
+  flex:1;
+  text-align:left;
+}
+
+label{
+  display:block;
+  margin-bottom:5px;
+  font-weight:bold;
+}
+
+button{
+  border:0;
+  background:#2563eb;
+  color:white;
+  padding:12px 20px;
+  margin:18px 4px 8px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+button:disabled{
+  background:#999;
+  cursor:not-allowed;
+}
+
+.status{
+  margin-top:15px;
+  font-weight:bold;
+  color:#2563eb;
+  line-height:1.6;
+}
+
+.download{
+  display:none;
+  text-decoration:none;
+  background:#16a34a;
+  color:white;
+  padding:12px 20px;
+  border-radius:8px;
+  margin-top:12px;
+}
+
+.home{
+  display:inline-block;
+  margin-top:20px;
+  text-decoration:none;
+  color:#2563eb;
+}
+
+.note{
+  font-size:13px;
+  color:#666;
+  margin-top:15px;
+  line-height:1.5;
+}
+
+.preview{
+  max-width:100%;
+  max-height:250px;
+  margin-top:15px;
+  border-radius:8px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📐 Image Resizer</h1>
+  <p>Resize your images to any size</p>
+</header>
+
+<div class="container">
+  <div class="card">
+
+    <h2>Resize Your Image</h2>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <img id="preview" class="preview">
+
+    <div class="row">
+
+      <div class="field">
+        <label for="width">Width (px)</label>
+        <input type="number" id="width" min="1" placeholder="Width">
+      </div>
+
+      <div class="field">
+        <label for="height">Height (px)</label>
+        <input type="number" id="height" min="1" placeholder="Height">
+      </div>
+
+    </div>
+
+    <button id="resizeBtn" disabled>
+      Resize Image
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <a
+      id="downloadBtn"
+      class="download"
+      download="ToolSarthi-Resized.jpg"
+    >
+      Download Resized Image
+    </a>
+
+    <div class="note">
+      Your image is resized directly in your browser.
+      It is not uploaded to our server.
+    </div>
+
+    <a class="home" href="../index.html">
+      ← Back to ToolSarthi
+    </a>
+
+  </div>
+</div>
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const widthInput = document.getElementById("width");
+const heightInput = document.getElementById("height");
+const resizeBtn = document.getElementById("resizeBtn");
+const status = document.getElementById("status");
+const downloadBtn = document.getElementById("downloadBtn");
+const preview = document.getElementById("preview");
+
+let selectedImage = null;
+let originalImage = new Image();
+
+imageInput.addEventListener("change", () => {
+
+  selectedImage = imageInput.files[0];
+
+  downloadBtn.style.display = "none";
+
+  if(!selectedImage){
+    resizeBtn.disabled = true;
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(event){
+
+    originalImage.onload = function(){
+
+      widthInput.value = originalImage.width;
+      heightInput.value = originalImage.height;
+
+      preview.src = event.target.result;
+      preview.style.display = "block";
+
+      resizeBtn.disabled = false;
+
+      status.textContent =
+        "Image selected: " +
+        originalImage.width +
+        " × " +
+        originalImage.height +
+        " px";
+
+    };
+
+    originalImage.src = event.target.result;
+
+  };
+
+  reader.readAsDataURL(selectedImage);
+
+});
+
+resizeBtn.addEventListener("click", () => {
+
+  const width = parseInt(widthInput.value);
+  const height = parseInt(heightInput.value);
+
+  if(!width || !height || width < 1 || height < 1){
+
+    status.textContent =
+      "❌ Please enter valid width and height.";
+
+    return;
+  }
+
+  status.textContent = "Resizing image...";
+  resizeBtn.disabled = true;
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = width;
+  canvas.height = height;
+
+  ctx.drawImage(
+    originalImage,
+    0,
+    0,
+    width,
+    height
+  );
+
+  canvas.toBlob(
+    function(blob){
+
+      if(!blob){
+
+        status.textContent =
+          "❌ Resize failed.";
+
+        resizeBtn.disabled = false;
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+
+      downloadBtn.href = url;
+      downloadBtn.style.display = "inline-block";
+
+      status.innerHTML =
+        "✅ Image resized successfully!<br>" +
+        "New size: " +
+        width +
+        " × " +
+        height +
+        " px";
+
+      resizeBtn.disabled = false;
+
+    },
+    "image/jpeg",
+    0.92
+  );
+
+});
+
+</script>
+
+</body>
+      </html>
