@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Oil Painting Effect - ToolSarthi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+    }
+
+    .controls {
+      margin: 15px 0;
+    }
+
+    input[type="range"] {
+      width: 180px;
+      margin: 8px;
+    }
+
+    button {
+      margin: 8px;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #222;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+
+    #downloadBtn {
+      display: none;
+      background: #0a7cff;
+    }
+
+    .value {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🖌️ Image Oil Painting Effect</h1>
+    <p>Turn your photos into beautiful oil painting style artwork.</p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <div class="controls">
+
+      <label>
+        Painting Strength:
+        <input
+          type="range"
+          id="strength"
+          min="10"
+          max="100"
+          value="60"
+        >
+        <span class="value" id="strengthValue">60</span>
+      </label>
+
+      <br>
+
+      <button onclick="applyPainting()">Apply Painting</button>
+      <button onclick="resetImage()">Reset</button>
+      <button id="downloadBtn" onclick="downloadImage()">Download Image</button>
+
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+  </div>
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const strength = document.getElementById("strength");
+const strengthValue = document.getElementById("strengthValue");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let originalImage = new Image();
+
+strength.addEventListener("input", function () {
+  strengthValue.textContent = this.value;
+});
+
+
+imageInput.addEventListener("change", function () {
+
+  const file = this.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+
+    originalImage.onload = function () {
+
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      downloadBtn.style.display = "none";
+    };
+
+    originalImage.src = event.target.result;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+
+function applyPainting() {
+
+  if (!originalImage.src) {
+    alert("Please upload an image first.");
+    return;
+  }
+
+  ctx.drawImage(
+    originalImage,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const imageData = ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const data = imageData.data;
+
+  const amount = Number(strength.value) / 100;
+
+  const radius = Math.max(
+    1,
+    Math.round(1 + amount * 2)
+  );
+
+  const original = new Uint8ClampedArray(data);
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  for (let y = radius; y < height - radius; y++) {
+
+    for (let x = radius; x < width - radius; x++) {
+
+      const center = (y * width + x) * 4;
+
+      let totalR = 0;
+      let totalG = 0;
+      let totalB = 0;
+      let count = 0;
+
+      for (
+        let yy = y - radius;
+        yy <= y + radius;
+        yy++
+      ) {
+
+        for (
+          let xx = x - radius;
+          xx <= x + radius;
+          xx++
+        ) {
+
+          const index =
+            (yy * width + xx) * 4;
+
+          totalR += original[index];
+          totalG += original[index + 1];
+          totalB += original[index + 2];
+
+          count++;
+        }
+      }
+
+      const avgR = totalR / count;
+      const avgG = totalG / count;
+      const avgB = totalB / count;
+
+      data[center] =
+        original[center] * (1 - amount * 0.65) +
+        avgR * (amount * 0.65);
+
+      data[center + 1] =
+        original[center + 1] * (1 - amount * 0.65) +
+        avgG * (amount * 0.65);
+
+      data[center + 2] =
+        original[center + 2] * (1 - amount * 0.65) +
+        avgB * (amount * 0.65);
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  ctx.save();
+
+  ctx.globalAlpha = 0.15 + amount * 0.2;
+
+  ctx.filter =
+    "saturate(" +
+    (110 + amount * 45) +
+    "%) contrast(" +
+    (105 + amount * 20) +
+    "%)";
+
+  ctx.drawImage(
+    originalImage,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.restore();
+
+  downloadBtn.style.display = "inline-block";
+}
+
+
+function resetImage() {
+
+  if (!originalImage.src) return;
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.drawImage(
+    originalImage,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  downloadBtn.style.display = "none";
+}
+
+
+function downloadImage() {
+
+  const link = document.createElement("a");
+
+  link.download = "toolsarthi-oil-painting.png";
+
+  link.href = canvas.toDataURL("image/png");
+
+  link.click();
+}
+
+</script>
+
+</body>
+</html>
