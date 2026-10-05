@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Image Film Grain Effect - ToolSarthi</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    margin:0;
+    padding:20px;
+    text-align:center;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+p{
+    color:#666;
+}
+
+input[type="file"]{
+    margin:20px 0;
+}
+
+canvas{
+    max-width:100%;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.controls{
+    margin:15px 0;
+}
+
+input[type="range"]{
+    width:80%;
+}
+
+button{
+    padding:12px 18px;
+    margin:6px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#222;
+    color:white;
+    font-size:15px;
+}
+
+button:hover{
+    opacity:0.85;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📷 Image Film Grain Effect</h1>
+
+<p>Add a classic old-camera film grain texture to your photos.</p>
+
+<input type="file" id="upload" accept="image/*">
+
+<div class="controls">
+
+<label>
+Grain Strength:
+<strong><span id="grainValue">25</span></strong>
+</label>
+
+<br><br>
+
+<input
+    type="range"
+    id="grain"
+    min="0"
+    max="100"
+    value="25"
+>
+
+</div>
+
+<canvas id="canvas"></canvas>
+
+<br>
+
+<button onclick="applyGrain()">Apply Effect</button>
+
+<button onclick="resetImage()">Reset</button>
+
+<button onclick="downloadImage()">Download Image</button>
+
+</div>
+
+<script>
+
+const upload =
+    document.getElementById("upload");
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const grainSlider =
+    document.getElementById("grain");
+
+const grainValue =
+    document.getElementById("grainValue");
+
+let originalImage = null;
+
+grainSlider.addEventListener("input", function(){
+
+    grainValue.textContent = this.value;
+
+});
+
+upload.addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const img = new Image();
+
+    img.onload = function(){
+
+        originalImage = img;
+
+        canvas.width = img.width;
+
+        canvas.height = img.height;
+
+        ctx.drawImage(img,0,0);
+
+    };
+
+    img.src = URL.createObjectURL(file);
+
+});
+
+function applyGrain(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    const imageData =
+        ctx.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+    const data = imageData.data;
+
+    const strength =
+        Number(grainSlider.value);
+
+    const amount =
+        strength * 1.5;
+
+    for(let i = 0; i < data.length; i += 4){
+
+        const noise =
+            (Math.random() - 0.5) * amount;
+
+        data[i] =
+            Math.max(0, Math.min(255, data[i] + noise));
+
+        data[i + 1] =
+            Math.max(0, Math.min(255, data[i + 1] + noise));
+
+        data[i + 2] =
+            Math.max(0, Math.min(255, data[i + 2] + noise));
+
+    }
+
+    ctx.putImageData(imageData,0,0);
+
+}
+
+function resetImage(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    canvas.width =
+        originalImage.width;
+
+    canvas.height =
+        originalImage.height;
+
+    ctx.drawImage(
+        originalImage,
+        0,
+        0
+    );
+
+}
+
+function downloadImage(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    const link =
+        document.createElement("a");
+
+    link.download =
+        "toolsarthi-film-grain.png";
+
+    link.href =
+        canvas.toDataURL("image/png");
+
+    link.click();
+
+}
+
+</script>
+
+</body>
+  </html>
