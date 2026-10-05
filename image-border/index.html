@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Border Maker - ToolSarthi</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input,
+    select {
+      margin: 12px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 450px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      display: none;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Image Border Maker</h1>
+
+    <p>Add a beautiful border around your images.</p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <br>
+
+    <label>Border Size:</label>
+
+    <select id="borderSize">
+      <option value="10">Small</option>
+      <option value="25" selected>Medium</option>
+      <option value="50">Large</option>
+      <option value="80">Extra Large</option>
+    </select>
+
+    <br>
+
+    <label>Border Color:</label>
+
+    <input type="color" id="borderColor" value="#000000">
+
+    <br>
+
+    <canvas id="canvas"></canvas>
+
+    <br>
+
+    <button id="borderBtn">Add Border</button>
+
+    <button id="downloadBtn">Download Image</button>
+
+  </div>
+
+  <script>
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const borderSize =
+      document.getElementById("borderSize");
+
+    const borderColor =
+      document.getElementById("borderColor");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const borderBtn =
+      document.getElementById("borderBtn");
+
+    const downloadBtn =
+      document.getElementById("downloadBtn");
+
+    let selectedImage = new Image();
+
+
+    imageInput.addEventListener(
+      "change",
+      function () {
+
+        const file = this.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+          selectedImage.onload = function () {
+
+            canvas.style.display = "block";
+
+            borderBtn.style.display =
+              "inline-block";
+
+            downloadBtn.style.display =
+              "none";
+
+            canvas.width =
+              selectedImage.width + 100;
+
+            canvas.height =
+              selectedImage.height + 100;
+
+            ctx.fillStyle =
+              borderColor.value;
+
+            ctx.fillRect(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+            ctx.drawImage(
+              selectedImage,
+              50,
+              50
+            );
+
+          };
+
+          selectedImage.src =
+            event.target.result;
+
+        };
+
+        reader.readAsDataURL(file);
+
+      }
+    );
+
+
+    borderBtn.addEventListener(
+      "click",
+      function () {
+
+        const size =
+          parseInt(borderSize.value);
+
+        canvas.width =
+          selectedImage.width + size * 2;
+
+        canvas.height =
+          selectedImage.height + size * 2;
+
+        ctx.fillStyle =
+          borderColor.value;
+
+        ctx.fillRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          selectedImage,
+          size,
+          size
+        );
+
+        downloadBtn.style.display =
+          "inline-block";
+
+      }
+    );
+
+
+    downloadBtn.addEventListener(
+      "click",
+      function () {
+
+        const link =
+          document.createElement("a");
+
+        link.download =
+          "image-with-border.png";
+
+        link.href =
+          canvas.toDataURL("image/png");
+
+        link.click();
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
