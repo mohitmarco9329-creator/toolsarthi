@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Brightness & Contrast - ToolSarthi</title>
+
+  <meta name="description" content="Adjust image brightness and contrast online for free.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: none;
+      margin: 20px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .controls {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .value {
+      font-weight: bold;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>☀️ Image Brightness & Contrast</h1>
+
+    <p>
+      Adjust the brightness and contrast of your image easily.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="controls" id="controls">
+
+      <div class="control">
+        <label>
+          Brightness:
+          <span class="value" id="brightnessValue">0</span>
+        </label>
+
+        <input
+          type="range"
+          id="brightness"
+          min="-100"
+          max="100"
+          value="0"
+        >
+      </div>
+
+      <div class="control">
+        <label>
+          Contrast:
+          <span class="value" id="contrastValue">0</span>
+        </label>
+
+        <input
+          type="range"
+          id="contrast"
+          min="-100"
+          max="100"
+          value="0"
+        >
+      </div>
+
+      <div style="text-align:center;">
+
+        <button id="resetButton">
+          🔄 Reset
+        </button>
+
+        <button id="downloadButton">
+          ⬇️ Download Image
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+  </div>
+
+  <script>
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const controls =
+      document.getElementById("controls");
+
+    const brightness =
+      document.getElementById("brightness");
+
+    const contrast =
+      document.getElementById("contrast");
+
+    const brightnessValue =
+      document.getElementById("brightnessValue");
+
+    const contrastValue =
+      document.getElementById("contrastValue");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const message =
+      document.getElementById("message");
+
+    let originalImage = new Image();
+
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        originalImage.onload = function() {
+
+          canvas.width =
+            originalImage.naturalWidth;
+
+          canvas.height =
+            originalImage.naturalHeight;
+
+          brightness.value = 0;
+          contrast.value = 0;
+
+          brightnessValue.textContent = "0";
+          contrastValue.textContent = "0";
+
+          drawImage();
+
+          canvas.style.display = "block";
+          controls.style.display = "block";
+
+          message.textContent =
+            "Image loaded successfully.";
+
+        };
+
+        originalImage.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+
+    function drawImage() {
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data = imageData.data;
+
+      const b =
+        Number(brightness.value);
+
+      const c =
+        Number(contrast.value);
+
+      const factor =
+        (259 * (c + 255)) /
+        (255 * (259 - c));
+
+      for (let i = 0; i < data.length; i += 4) {
+
+        data[i] =
+          clamp(
+            factor * (data[i] - 128) +
+            128 + b
+          );
+
+        data[i + 1] =
+          clamp(
+            factor * (data[i + 1] - 128) +
+            128 + b
+          );
+
+        data[i + 2] =
+          clamp(
+            factor * (data[i + 2] - 128) +
+            128 + b
+          );
+      }
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+    }
+
+
+    function clamp(value) {
+
+      return Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(value)
+        )
+      );
+
+    }
+
+
+    brightness.addEventListener("input", function() {
+
+      brightnessValue.textContent =
+        brightness.value;
+
+      drawImage();
+
+    });
+
+
+    contrast.addEventListener("input", function() {
+
+      contrastValue.textContent =
+        contrast.value;
+
+      drawImage();
+
+    });
+
+
+    resetButton.addEventListener("click", function() {
+
+      brightness.value = 0;
+      contrast.value = 0;
+
+      brightnessValue.textContent = "0";
+      contrastValue.textContent = "0";
+
+      drawImage();
+
+      message.textContent =
+        "✅ Image reset successfully.";
+
+    });
+
+
+    downloadButton.addEventListener("click", function() {
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "brightness-contrast-image.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+  </script>
+
+</body>
+</html>
