@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Image Lens Blur Effect - ToolSarthi</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    margin:0;
+    padding:20px;
+    text-align:center;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+p{
+    color:#666;
+}
+
+input[type="file"]{
+    margin:20px 0;
+}
+
+canvas{
+    max-width:100%;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.controls{
+    margin:18px 0;
+}
+
+input[type="range"]{
+    width:80%;
+}
+
+button{
+    padding:12px 18px;
+    margin:6px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#222;
+    color:white;
+    font-size:15px;
+}
+
+button:hover{
+    opacity:0.85;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🔎 Image Lens Blur Effect</h1>
+
+<p>Keep the center sharp and softly blur the edges of your photos.</p>
+
+<input type="file" id="upload" accept="image/*">
+
+<div class="controls">
+
+<label>
+Blur Strength:
+<strong><span id="strengthValue">8</span></strong>
+</label>
+
+<br><br>
+
+<input
+    type="range"
+    id="strength"
+    min="2"
+    max="20"
+    value="8"
+>
+
+</div>
+
+<canvas id="canvas"></canvas>
+
+<br>
+
+<button onclick="applyLensBlur()">Apply Effect</button>
+
+<button onclick="resetImage()">Reset</button>
+
+<button onclick="downloadImage()">Download Image</button>
+
+</div>
+
+<script>
+
+const upload =
+    document.getElementById("upload");
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const strengthSlider =
+    document.getElementById("strength");
+
+const strengthValue =
+    document.getElementById("strengthValue");
+
+let originalImage = null;
+
+strengthSlider.addEventListener("input", function(){
+
+    strengthValue.textContent = this.value;
+
+});
+
+upload.addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const img = new Image();
+
+    img.onload = function(){
+
+        originalImage = img;
+
+        canvas.width = img.width;
+
+        canvas.height = img.height;
+
+        ctx.drawImage(img,0,0);
+
+    };
+
+    img.src = URL.createObjectURL(file);
+
+});
+
+function applyLensBlur(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0,0,width,height);
+
+    /*
+       Draw the original image first.
+    */
+
+    ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        width,
+        height
+    );
+
+    /*
+       Create a blurred copy.
+    */
+
+    const blurredCanvas =
+        document.createElement("canvas");
+
+    blurredCanvas.width = width;
+    blurredCanvas.height = height;
+
+    const blurredCtx =
+        blurredCanvas.getContext("2d");
+
+    blurredCtx.filter =
+        "blur(" + strengthSlider.value + "px)";
+
+    blurredCtx.drawImage(
+        originalImage,
+        0,
+        0,
+        width,
+        height
+    );
+
+    /*
+       Put blurred image over original.
+       A radial gradient mask keeps
+       the center clear.
+    */
+
+    ctx.save();
+
+    const gradient =
+        ctx.createRadialGradient(
+            width / 2,
+            height / 2,
+            Math.min(width,height) * 0.15,
+            width / 2,
+            height / 2,
+            Math.max(width,height) * 0.65
+        );
+
+    gradient.addColorStop(0,"rgba(0,0,0,0)");
+
+    gradient.addColorStop(0.45,"rgba(0,0,0,0)");
+
+    gradient.addColorStop(0.8,"rgba(0,0,0,0.45)");
+
+    gradient.addColorStop(1,"rgba(0,0,0,1)");
+
+    ctx.globalCompositeOperation =
+        "source-over";
+
+    ctx.globalAlpha = 1;
+
+    ctx.drawImage(
+        blurredCanvas,
+        0,
+        0
+    );
+
+    ctx.globalCompositeOperation =
+        "destination-in";
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    ctx.restore();
+
+}
+
+function resetImage(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    canvas.width =
+        originalImage.width;
+
+    canvas.height =
+        originalImage.height;
+
+    ctx.drawImage(
+        originalImage,
+        0,
+        0
+    );
+
+}
+
+function downloadImage(){
+
+    if(!originalImage){
+
+        alert("Please upload an image first.");
+
+        return;
+    }
+
+    const link =
+        document.createElement("a");
+
+    link.download =
+        "toolsarthi-lens-blur.png";
+
+    link.href =
+        canvas.toDataURL("image/png");
+
+    link.click();
+
+}
+
+</script>
+
+</body>
+</html>
