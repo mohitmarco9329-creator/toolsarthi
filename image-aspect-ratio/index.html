@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Aspect Ratio Changer - ToolSarthi</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input,
+    select {
+      margin: 12px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 450px;
+      margin: 20px 0;
+      display: none;
+      background: #eee;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      display: none;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Image Aspect Ratio Changer</h1>
+
+    <p>Resize images into popular aspect ratios easily.</p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <br>
+
+    <select id="ratioSelect">
+      <option value="1:1">1:1 Square</option>
+      <option value="4:3">4:3 Standard</option>
+      <option value="3:4">3:4 Portrait</option>
+      <option value="16:9" selected>16:9 Landscape</option>
+      <option value="9:16">9:16 Portrait</option>
+    </select>
+
+    <br>
+
+    <canvas id="canvas"></canvas>
+
+    <br>
+
+    <button id="applyBtn">Apply Ratio</button>
+
+    <button id="downloadBtn">Download Image</button>
+
+  </div>
+
+  <script>
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const ratioSelect =
+      document.getElementById("ratioSelect");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const applyBtn =
+      document.getElementById("applyBtn");
+
+    const downloadBtn =
+      document.getElementById("downloadBtn");
+
+    let selectedImage = new Image();
+
+
+    imageInput.addEventListener(
+      "change",
+      function () {
+
+        const file = this.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+          selectedImage.onload = function () {
+
+            canvas.width =
+              selectedImage.width;
+
+            canvas.height =
+              selectedImage.height;
+
+            ctx.drawImage(
+              selectedImage,
+              0,
+              0
+            );
+
+            canvas.style.display =
+              "block";
+
+            applyBtn.style.display =
+              "inline-block";
+
+            downloadBtn.style.display =
+              "none";
+
+          };
+
+          selectedImage.src =
+            event.target.result;
+
+        };
+
+        reader.readAsDataURL(file);
+
+      }
+    );
+
+
+    applyBtn.addEventListener(
+      "click",
+      function () {
+
+        const ratio =
+          ratioSelect.value.split(":");
+
+        const ratioWidth =
+          parseInt(ratio[0]);
+
+        const ratioHeight =
+          parseInt(ratio[1]);
+
+        const imageWidth =
+          selectedImage.width;
+
+        const imageHeight =
+          selectedImage.height;
+
+        const imageRatio =
+          imageWidth / imageHeight;
+
+        const targetRatio =
+          ratioWidth / ratioHeight;
+
+        let cropWidth;
+        let cropHeight;
+
+        if (imageRatio > targetRatio) {
+
+          cropHeight =
+            imageHeight;
+
+          cropWidth =
+            imageHeight * targetRatio;
+
+        } else {
+
+          cropWidth =
+            imageWidth;
+
+          cropHeight =
+            imageWidth / targetRatio;
+
+        }
+
+        const sourceX =
+          (imageWidth - cropWidth) / 2;
+
+        const sourceY =
+          (imageHeight - cropHeight) / 2;
+
+        const outputWidth =
+          1200;
+
+        const outputHeight =
+          Math.round(
+            outputWidth / targetRatio
+          );
+
+        canvas.width =
+          outputWidth;
+
+        canvas.height =
+          outputHeight;
+
+        ctx.drawImage(
+          selectedImage,
+          sourceX,
+          sourceY,
+          cropWidth,
+          cropHeight,
+          0,
+          0,
+          outputWidth,
+          outputHeight
+        );
+
+        downloadBtn.style.display =
+          "inline-block";
+
+      }
+    );
+
+
+    downloadBtn.addEventListener(
+      "click",
+      function () {
+
+        const link =
+          document.createElement("a");
+
+        link.download =
+          "aspect-ratio-image.jpg";
+
+        link.href =
+          canvas.toDataURL(
+            "image/jpeg",
+            0.92
+          );
+
+        link.click();
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
