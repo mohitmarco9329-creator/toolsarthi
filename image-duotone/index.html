@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Duotone Effect - ToolSarthi</title>
+
+  <meta name="description" content="Create stylish duotone effects on images online for free.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: none;
+      margin: 20px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .controls {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .control {
+      margin: 15px 0;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    select {
+      padding: 10px;
+      width: 90%;
+      max-width: 350px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🌈 Image Duotone Effect</h1>
+
+    <p>
+      Turn your image into a stylish two-color duotone effect.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="controls" id="controls">
+
+      <div class="control">
+
+        <label>Color Combination</label>
+
+        <select id="duotoneSelect">
+
+          <option value="blue-pink">Blue + Pink</option>
+          <option value="purple-orange">Purple + Orange</option>
+          <option value="green-yellow">Green + Yellow</option>
+          <option value="red-blue">Red + Blue</option>
+          <option value="black-yellow">Black + Yellow</option>
+
+        </select>
+
+      </div>
+
+      <button id="applyButton">
+        🎨 Apply Duotone
+      </button>
+
+      <button id="resetButton">
+        🔄 Reset
+      </button>
+
+      <button id="downloadButton">
+        ⬇️ Download Image
+      </button>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+  </div>
+
+  <script>
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const controls =
+      document.getElementById("controls");
+
+    const duotoneSelect =
+      document.getElementById("duotoneSelect");
+
+    const applyButton =
+      document.getElementById("applyButton");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const message =
+      document.getElementById("message");
+
+    let originalImage = new Image();
+
+
+    const palettes = {
+
+      "blue-pink": {
+        dark: [20, 40, 120],
+        light: [255, 80, 170]
+      },
+
+      "purple-orange": {
+        dark: [70, 20, 120],
+        light: [255, 150, 40]
+      },
+
+      "green-yellow": {
+        dark: [10, 90, 50],
+        light: [255, 220, 50]
+      },
+
+      "red-blue": {
+        dark: [120, 20, 30],
+        light: [50, 150, 255]
+      },
+
+      "black-yellow": {
+        dark: [10, 10, 10],
+        light: [255, 220, 30]
+      }
+
+    };
+
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        originalImage.onload = function() {
+
+          canvas.width =
+            originalImage.naturalWidth;
+
+          canvas.height =
+            originalImage.naturalHeight;
+
+          drawOriginal();
+
+          canvas.style.display = "block";
+
+          controls.style.display = "block";
+
+          message.textContent =
+            "Image loaded successfully.";
+
+        };
+
+        originalImage.src = e.target.result;
+
+      };
+
+      reader.readAsDataURL(file);
+
+    });
+
+
+    function drawOriginal() {
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+    }
+
+
+    applyButton.addEventListener("click", function() {
+
+      drawOriginal();
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data = imageData.data;
+
+      const palette =
+        palettes[duotoneSelect.value];
+
+      for (let i = 0; i < data.length; i += 4) {
+
+        const brightness =
+          (
+            data[i] +
+            data[i + 1] +
+            data[i + 2]
+          ) / 3;
+
+        const t =
+          brightness / 255;
+
+        data[i] =
+          Math.round(
+            palette.dark[0] +
+            (
+              palette.light[0] -
+              palette.dark[0]
+            ) * t
+          );
+
+        data[i + 1] =
+          Math.round(
+            palette.dark[1] +
+            (
+              palette.light[1] -
+              palette.dark[1]
+            ) * t
+          );
+
+        data[i + 2] =
+          Math.round(
+            palette.dark[2] +
+            (
+              palette.light[2] -
+              palette.dark[2]
+            ) * t
+          );
+
+      }
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+
+      message.textContent =
+        "✅ Duotone effect applied!";
+
+    });
+
+
+    resetButton.addEventListener("click", function() {
+
+      drawOriginal();
+
+      message.textContent =
+        "✅ Original image restored.";
+
+    });
+
+
+    downloadButton.addEventListener("click", function() {
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "duotone-image.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+
+  </script>
+
+</body>
+</html>
