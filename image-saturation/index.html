@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Saturation Adjuster - ToolSarthi</title>
+
+  <meta name="description" content="Adjust image saturation online and make colors vibrant or faded.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: none;
+      margin: 20px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .controls {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .value {
+      font-weight: bold;
+    }
+
+    .buttons {
+      text-align: center;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎨 Image Saturation Adjuster</h1>
+
+    <p>
+      Make image colors more vibrant or more faded.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="controls" id="controls">
+
+      <div class="control">
+
+        <label>
+          Saturation:
+          <span class="value" id="saturationValue">0</span>
+        </label>
+
+        <input
+          type="range"
+          id="saturation"
+          min="-100"
+          max="100"
+          value="0"
+        >
+
+      </div>
+
+      <div class="buttons">
+
+        <button id="resetButton">
+          🔄 Reset
+        </button>
+
+        <button id="downloadButton">
+          ⬇️ Download Image
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+  </div>
+
+  <script>
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const controls =
+      document.getElementById("controls");
+
+    const saturation =
+      document.getElementById("saturation");
+
+    const saturationValue =
+      document.getElementById("saturationValue");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const message =
+      document.getElementById("message");
+
+    let originalImage = new Image();
+
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        originalImage.onload = function() {
+
+          canvas.width =
+            originalImage.naturalWidth;
+
+          canvas.height =
+            originalImage.naturalHeight;
+
+          saturation.value = 0;
+
+          saturationValue.textContent = "0";
+
+          drawImage();
+
+          canvas.style.display = "block";
+
+          controls.style.display = "block";
+
+          message.textContent =
+            "Image loaded successfully.";
+
+        };
+
+        originalImage.src = e.target.result;
+
+      };
+
+      reader.readAsDataURL(file);
+
+    });
+
+
+    function drawImage() {
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data = imageData.data;
+
+      const amount =
+        Number(saturation.value) / 100;
+
+      for (let i = 0; i < data.length; i += 4) {
+
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const max =
+          Math.max(r, g, b);
+
+        const min =
+          Math.min(r, g, b);
+
+        const lightness =
+          (max + min) / 2;
+
+        const factor =
+          amount >= 0
+            ? 1 + amount
+            : 1 + amount;
+
+        data[i] =
+          clamp(
+            lightness +
+            (r - lightness) * factor
+          );
+
+        data[i + 1] =
+          clamp(
+            lightness +
+            (g - lightness) * factor
+          );
+
+        data[i + 2] =
+          clamp(
+            lightness +
+            (b - lightness) * factor
+          );
+      }
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+    }
+
+
+    function clamp(value) {
+
+      return Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(value)
+        )
+      );
+
+    }
+
+
+    saturation.addEventListener("input", function() {
+
+      saturationValue.textContent =
+        saturation.value;
+
+      drawImage();
+
+    });
+
+
+    resetButton.addEventListener("click", function() {
+
+      saturation.value = 0;
+
+      saturationValue.textContent = "0";
+
+      drawImage();
+
+      message.textContent =
+        "✅ Saturation reset successfully.";
+
+    });
+
+
+    downloadButton.addEventListener("click", function() {
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "saturated-image.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+
+  </script>
+
+</body>
+          </html>
