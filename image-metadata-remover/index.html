@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Metadata Remover - ToolSarthi</title>
+
+  <meta name="description" content="Remove metadata from images and download a clean copy easily.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: none;
+      margin: 20px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      display: none;
+      margin: 10px auto;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .info {
+      background: #f1f3f6;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🧹 Image Metadata Remover</h1>
+
+    <p>
+      Remove metadata from your image and download a clean copy.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <canvas id="canvas"></canvas>
+
+    <button id="downloadButton">
+      ⬇️ Download Clean Image
+    </button>
+
+    <div class="message" id="message"></div>
+
+    <div class="info">
+      Your image is processed directly in your browser.
+      It is not uploaded to a server.
+    </div>
+
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const message =
+      document.getElementById("message");
+
+    let originalImage = new Image();
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        originalImage.onload = function() {
+
+          canvas.width = originalImage.naturalWidth;
+          canvas.height = originalImage.naturalHeight;
+
+          ctx.drawImage(
+            originalImage,
+            0,
+            0
+          );
+
+          canvas.style.display = "block";
+          downloadButton.style.display = "block";
+
+          message.textContent =
+            "✅ Image processed successfully!";
+
+        };
+
+        originalImage.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+
+    downloadButton.addEventListener("click", function() {
+
+      const link = document.createElement("a");
+
+      link.download = "clean-image.png";
+
+      link.href = canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+  </script>
+
+</body>
+</html>
