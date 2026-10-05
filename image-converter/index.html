@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Converter - ToolSarthi</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input,
+    select {
+      margin: 15px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 400px;
+      margin: 15px 0;
+      border-radius: 10px;
+      display: none;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Image Converter</h1>
+
+    <p>Convert images between JPG, PNG and WebP formats.</p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <br>
+
+    <img id="preview">
+
+    <br>
+
+    <select id="formatSelect">
+      <option value="image/jpeg">JPG</option>
+      <option value="image/png">PNG</option>
+      <option value="image/webp">WebP</option>
+    </select>
+
+    <br>
+
+    <button id="convertBtn">Convert & Download</button>
+
+  </div>
+
+  <script>
+
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const formatSelect = document.getElementById("formatSelect");
+    const convertBtn = document.getElementById("convertBtn");
+
+    let selectedImage = new Image();
+
+    imageInput.addEventListener("change", function () {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+
+        selectedImage.onload = function () {
+
+          preview.src = event.target.result;
+          preview.style.display = "inline-block";
+          convertBtn.style.display = "inline-block";
+
+        };
+
+        selectedImage.src = event.target.result;
+
+      };
+
+      reader.readAsDataURL(file);
+
+    });
+
+
+    convertBtn.addEventListener("click", function () {
+
+      const canvas = document.createElement("canvas");
+
+      canvas.width = selectedImage.width;
+      canvas.height = selectedImage.height;
+
+      const ctx = canvas.getContext("2d");
+
+      if (formatSelect.value === "image/jpeg") {
+
+        ctx.fillStyle = "#ffffff";
+
+        ctx.fillRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      }
+
+      ctx.drawImage(
+        selectedImage,
+        0,
+        0
+      );
+
+      const format = formatSelect.value;
+
+      let extension = "jpg";
+
+      if (format === "image/png") {
+        extension = "png";
+      }
+
+      if (format === "image/webp") {
+        extension = "webp";
+      }
+
+      canvas.toBlob(function (blob) {
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = "converted-image." + extension;
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+      }, format, 0.92);
+
+    });
+
+  </script>
+
+</body>
+  </html>
