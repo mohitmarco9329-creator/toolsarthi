@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Flip Tool - ToolSarthi</title>
+
+  <meta name="description" content="Flip images horizontally or vertically online for free.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: none;
+      margin: 20px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .controls {
+      display: none;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>↔️ Image Flip Tool</h1>
+
+    <p>
+      Flip your image horizontally or vertically.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="controls" id="controls">
+
+      <button id="horizontalButton">
+        ↔️ Flip Horizontal
+      </button>
+
+      <button id="verticalButton">
+        ↕️ Flip Vertical
+      </button>
+
+      <button id="resetButton">
+        🔄 Reset
+      </button>
+
+      <button id="downloadButton">
+        ⬇️ Download Image
+      </button>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+  </div>
+
+  <script>
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const controls =
+      document.getElementById("controls");
+
+    const horizontalButton =
+      document.getElementById("horizontalButton");
+
+    const verticalButton =
+      document.getElementById("verticalButton");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+    const message =
+      document.getElementById("message");
+
+    let originalImage = new Image();
+
+    let flipHorizontal = false;
+    let flipVertical = false;
+
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        originalImage.onload = function() {
+
+          canvas.width =
+            originalImage.naturalWidth;
+
+          canvas.height =
+            originalImage.naturalHeight;
+
+          flipHorizontal = false;
+          flipVertical = false;
+
+          drawImage();
+
+          canvas.style.display = "block";
+
+          controls.style.display = "block";
+
+          message.textContent =
+            "Image loaded successfully.";
+
+        };
+
+        originalImage.src = e.target.result;
+
+      };
+
+      reader.readAsDataURL(file);
+
+    });
+
+
+    function drawImage() {
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.save();
+
+      ctx.translate(
+        flipHorizontal ? canvas.width : 0,
+        flipVertical ? canvas.height : 0
+      );
+
+      ctx.scale(
+        flipHorizontal ? -1 : 1,
+        flipVertical ? -1 : 1
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.restore();
+    }
+
+
+    horizontalButton.addEventListener("click", function() {
+
+      flipHorizontal = !flipHorizontal;
+
+      drawImage();
+
+      message.textContent =
+        "↔️ Horizontal flip applied.";
+
+    });
+
+
+    verticalButton.addEventListener("click", function() {
+
+      flipVertical = !flipVertical;
+
+      drawImage();
+
+      message.textContent =
+        "↕️ Vertical flip applied.";
+
+    });
+
+
+    resetButton.addEventListener("click", function() {
+
+      flipHorizontal = false;
+      flipVertical = false;
+
+      drawImage();
+
+      message.textContent =
+        "✅ Image reset successfully.";
+
+    });
+
+
+    downloadButton.addEventListener("click", function() {
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "flipped-image.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+
+  </script>
+
+</body>
+</html>
