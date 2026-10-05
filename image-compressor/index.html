@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Image Compressor - ToolSarthi</title>
+<meta name="description" content="Compress images online for free with ToolSarthi. Reduce image size directly in your browser.">
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f7fb;
+  color:#222;
+}
+
+header{
+  background:#2563eb;
+  color:white;
+  text-align:center;
+  padding:25px 15px;
+}
+
+header h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+header p{
+  margin:0;
+  font-size:15px;
+}
+
+.container{
+  max-width:700px;
+  margin:40px auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:30px 25px;
+  border-radius:20px;
+  box-shadow:0 5px 25px rgba(0,0,0,.08);
+  text-align:center;
+}
+
+h2{
+  margin-top:0;
+}
+
+input[type="file"]{
+  width:100%;
+  padding:12px;
+  margin:10px 0 20px;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+label{
+  display:block;
+  text-align:left;
+  margin:15px 0 8px;
+  font-weight:bold;
+}
+
+input[type="range"]{
+  width:100%;
+}
+
+.value{
+  font-weight:bold;
+  color:#2563eb;
+}
+
+button{
+  border:0;
+  background:#2563eb;
+  color:white;
+  padding:12px 20px;
+  margin:15px 4px 8px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+button:disabled{
+  background:#999;
+  cursor:not-allowed;
+}
+
+.status{
+  margin-top:15px;
+  font-weight:bold;
+  color:#2563eb;
+  line-height:1.6;
+}
+
+.download{
+  display:none;
+  text-decoration:none;
+  background:#16a34a;
+  color:white;
+  padding:12px 20px;
+  border-radius:8px;
+  margin-top:12px;
+}
+
+.home{
+  display:inline-block;
+  margin-top:20px;
+  text-decoration:none;
+  color:#2563eb;
+}
+
+.note{
+  font-size:13px;
+  color:#666;
+  margin-top:15px;
+  line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🖼️ Image Compressor</h1>
+  <p>Reduce image size quickly and easily</p>
+</header>
+
+<div class="container">
+  <div class="card">
+
+    <h2>Compress Your Image</h2>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <label>
+      Compression Quality:
+      <span class="value" id="qualityValue">70%</span>
+    </label>
+
+    <input
+      type="range"
+      id="quality"
+      min="10"
+      max="100"
+      value="70"
+    >
+
+    <button id="compressBtn" disabled>
+      Compress Image
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <a
+      id="downloadBtn"
+      class="download"
+      download="ToolSarthi-Compressed.jpg"
+    >
+      Download Compressed Image
+    </a>
+
+    <div class="note">
+      Your image is processed directly in your browser.
+      It is not uploaded to our server.
+    </div>
+
+    <a class="home" href="../index.html">← Back to ToolSarthi</a>
+
+  </div>
+</div>
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const quality = document.getElementById("quality");
+const qualityValue = document.getElementById("qualityValue");
+const compressBtn = document.getElementById("compressBtn");
+const status = document.getElementById("status");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let selectedImage = null;
+
+quality.addEventListener("input", () => {
+  qualityValue.textContent = quality.value + "%";
+});
+
+imageInput.addEventListener("change", () => {
+
+  selectedImage = imageInput.files[0];
+
+  downloadBtn.style.display = "none";
+
+  if(selectedImage){
+
+    compressBtn.disabled = false;
+
+    status.textContent =
+      "Selected: " + selectedImage.name;
+
+  }else{
+
+    compressBtn.disabled = true;
+
+    status.textContent = "";
+
+  }
+
+});
+
+compressBtn.addEventListener("click", () => {
+
+  if(!selectedImage){
+    return;
+  }
+
+  status.textContent = "Compressing image...";
+  compressBtn.disabled = true;
+
+  const reader = new FileReader();
+
+  reader.onload = function(event){
+
+    const img = new Image();
+
+    img.onload = function(){
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let width = img.width;
+      let height = img.height;
+
+      const maxSize = 2000;
+
+      if(width > maxSize || height > maxSize){
+
+        if(width > height){
+
+          height = Math.round(
+            height * maxSize / width
+          );
+
+          width = maxSize;
+
+        }else{
+
+          width = Math.round(
+            width * maxSize / height
+          );
+
+          height = maxSize;
+
+        }
+
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        width,
+        height
+      );
+
+      const qualityValueNumber =
+        Number(quality.value) / 100;
+
+      canvas.toBlob(
+        function(blob){
+
+          if(!blob){
+
+            status.textContent =
+              "❌ Compression failed.";
+
+            compressBtn.disabled = false;
+            return;
+          }
+
+          const url = URL.createObjectURL(blob);
+
+          downloadBtn.href = url;
+          downloadBtn.style.display = "inline-block";
+
+          const oldSize =
+            (selectedImage.size / 1024).toFixed(1);
+
+          const newSize =
+            (blob.size / 1024).toFixed(1);
+
+          const reduction =
+            Math.max(
+              0,
+              Math.round(
+                (1 - blob.size / selectedImage.size) * 100
+              )
+            );
+
+          status.innerHTML =
+            "✅ Compression complete!<br>" +
+            "Original: " + oldSize + " KB<br>" +
+            "Compressed: " + newSize + " KB<br>" +
+            "Size reduced by: " + reduction + "%";
+
+          compressBtn.disabled = false;
+
+        },
+        "image/jpeg",
+        qualityValueNumber
+      );
+
+    };
+
+    img.onerror = function(){
+
+      status.textContent =
+        "❌ Could not read this image.";
+
+      compressBtn.disabled = false;
+
+    };
+
+    img.src = event.target.result;
+
+  };
+
+  reader.readAsDataURL(selectedImage);
+
+});
+
+</script>
+
+</body>
+  </html>
