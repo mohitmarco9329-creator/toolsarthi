@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Shadow - ToolSarthi</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #222;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input,
+    select {
+      margin: 15px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 450px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      display: none;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Image Shadow</h1>
+
+    <p>Add a professional drop shadow to your images.</p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <br>
+
+    <select id="shadowSize">
+      <option value="10">Small Shadow</option>
+      <option value="25" selected>Medium Shadow</option>
+      <option value="45">Large Shadow</option>
+      <option value="70">Strong Shadow</option>
+    </select>
+
+    <br>
+
+    <canvas id="canvas"></canvas>
+
+    <br>
+
+    <button id="shadowBtn">Add Shadow</button>
+
+    <button id="downloadBtn">Download Image</button>
+
+  </div>
+
+  <script>
+
+    const imageInput = document.getElementById("imageInput");
+    const shadowSize = document.getElementById("shadowSize");
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const shadowBtn = document.getElementById("shadowBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    let selectedImage = new Image();
+
+    imageInput.addEventListener("change", function () {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+
+        selectedImage.onload = function () {
+
+          canvas.width =
+            selectedImage.width + 120;
+
+          canvas.height =
+            selectedImage.height + 120;
+
+          canvas.style.display = "block";
+
+          shadowBtn.style.display =
+            "inline-block";
+
+          downloadBtn.style.display =
+            "none";
+
+          ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          ctx.drawImage(
+            selectedImage,
+            60,
+            60
+          );
+
+        };
+
+        selectedImage.src =
+          event.target.result;
+
+      };
+
+      reader.readAsDataURL(file);
+
+    });
+
+
+    shadowBtn.addEventListener("click", function () {
+
+      const shadow = parseInt(
+        shadowSize.value
+      );
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.save();
+
+      ctx.shadowColor =
+        "rgba(0, 0, 0, 0.45)";
+
+      ctx.shadowBlur = shadow;
+
+      ctx.shadowOffsetX = 8;
+
+      ctx.shadowOffsetY = 8;
+
+      ctx.drawImage(
+        selectedImage,
+        60,
+        60
+      );
+
+      ctx.restore();
+
+      downloadBtn.style.display =
+        "inline-block";
+
+    });
+
+
+    downloadBtn.addEventListener("click", function () {
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "image-with-shadow.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+
+    });
+
+  </script>
+
+</body>
+      </html>
