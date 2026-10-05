@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Color Picker - ToolSarthi</title>
+
+  <meta name="description" content="Pick any color from an image and get HEX and RGB color values easily.">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      cursor: crosshair;
+      display: none;
+      margin: 20px auto;
+    }
+
+    .result {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f1f3f6;
+      border-radius: 12px;
+    }
+
+    .color-box {
+      width: 100px;
+      height: 100px;
+      margin: 15px auto;
+      border-radius: 12px;
+      border: 2px solid #ccc;
+    }
+
+    .value {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 8px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎯 Image Color Picker</h1>
+
+    <p>
+      Upload an image and tap anywhere on it to pick a color.
+    </p>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <p class="hint">
+      Image upload karne ke baad image par kisi bhi point par tap/click karein.
+    </p>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="result" id="result">
+
+      <h2>Selected Color</h2>
+
+      <div class="color-box" id="colorBox"></div>
+
+      <div class="value">
+        HEX: <span id="hexValue">#000000</span>
+      </div>
+
+      <div class="value">
+        RGB: <span id="rgbValue">rgb(0, 0, 0)</span>
+      </div>
+
+      <button id="copyButton">📋 Copy HEX</button>
+
+    </div>
+
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const result = document.getElementById("result");
+    const colorBox = document.getElementById("colorBox");
+    const hexValue = document.getElementById("hexValue");
+    const rgbValue = document.getElementById("rgbValue");
+    const copyButton = document.getElementById("copyButton");
+
+    let image = new Image();
+
+    imageInput.addEventListener("change", function() {
+
+      const file = this.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+
+        image.onload = function() {
+
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+
+          ctx.drawImage(image, 0, 0);
+
+          canvas.style.display = "block";
+          result.style.display = "block";
+
+        };
+
+        image.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+
+    canvas.addEventListener("click", function(event) {
+
+      const rect = canvas.getBoundingClientRect();
+
+      const x = Math.floor(
+        (event.clientX - rect.left) *
+        canvas.width / rect.width
+      );
+
+      const y = Math.floor(
+        (event.clientY - rect.top) *
+        canvas.height / rect.height
+      );
+
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+      const r = pixel[0];
+      const g = pixel[1];
+      const b = pixel[2];
+
+      const hex =
+        "#" +
+        [r, g, b]
+        .map(value => value.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+
+      colorBox.style.backgroundColor = hex;
+
+      hexValue.textContent = hex;
+
+      rgbValue.textContent =
+        "rgb(" + r + ", " + g + ", " + b + ")";
+
+    });
+
+
+    copyButton.addEventListener("click", function() {
+
+      const hex = hexValue.textContent;
+
+      navigator.clipboard.writeText(hex).then(function() {
+
+        copyButton.textContent = "✅ Copied!";
+
+        setTimeout(function() {
+          copyButton.textContent = "📋 Copy HEX";
+        }, 1500);
+
+      });
+
+    });
+  </script>
+
+</body>
+  </html>
