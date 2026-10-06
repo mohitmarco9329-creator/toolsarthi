@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Selective Color Adjuster - ToolSarthi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    input[type="range"] {
+      width: 80%;
+    }
+
+    .value {
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      margin: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      background: #222;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .download {
+      background: #198754;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎨 Image Selective Color Adjuster</h1>
+
+    <p>
+      Adjust individual colors in your photo for creative color control.
+    </p>
+
+    <input type="file" id="upload" accept="image/*">
+
+    <div class="control">
+      <label>🔴 Red:
+        <span class="value" id="redValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="red" min="-100" max="100" value="0">
+    </div>
+
+    <div class="control">
+      <label>🟡 Yellow:
+        <span class="value" id="yellowValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="yellow" min="-100" max="100" value="0">
+    </div>
+
+    <div class="control">
+      <label>🟢 Green:
+        <span class="value" id="greenValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="green" min="-100" max="100" value="0">
+    </div>
+
+    <div class="control">
+      <label>🩵 Cyan:
+        <span class="value" id="cyanValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="cyan" min="-100" max="100" value="0">
+    </div>
+
+    <div class="control">
+      <label>🔵 Blue:
+        <span class="value" id="blueValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="blue" min="-100" max="100" value="0">
+    </div>
+
+    <div class="control">
+      <label>🟣 Magenta:
+        <span class="value" id="magentaValue">0</span>
+      </label>
+      <br><br>
+      <input type="range" id="magenta" min="-100" max="100" value="0">
+    </div>
+
+    <div>
+
+      <button onclick="applyEffect()">
+        Apply Effect
+      </button>
+
+      <button onclick="resetImage()">
+        Reset
+      </button>
+
+      <button class="download" onclick="downloadImage()">
+        Download
+      </button>
+
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+  </div>
+
+  <script>
+
+    const upload =
+      document.getElementById("upload");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const colors = [
+      "red",
+      "yellow",
+      "green",
+      "cyan",
+      "blue",
+      "magenta"
+    ];
+
+    let originalImage = null;
+
+    colors.forEach(function(color) {
+
+      const slider =
+        document.getElementById(color);
+
+      const value =
+        document.getElementById(color + "Value");
+
+      slider.addEventListener("input", function() {
+
+        value.textContent = this.value;
+
+      });
+
+    });
+
+    upload.addEventListener("change", function(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const img = new Image();
+
+      img.onload = function() {
+
+        originalImage = img;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        canvas.style.display = "block";
+      };
+
+      img.src = URL.createObjectURL(file);
+
+    });
+
+    function clamp(value) {
+
+      return Math.max(
+        0,
+        Math.min(255, value)
+      );
+
+    }
+
+    function applyEffect() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data = imageData.data;
+
+      const redAmount =
+        Number(document.getElementById("red").value);
+
+      const yellowAmount =
+        Number(document.getElementById("yellow").value);
+
+      const greenAmount =
+        Number(document.getElementById("green").value);
+
+      const cyanAmount =
+        Number(document.getElementById("cyan").value);
+
+      const blueAmount =
+        Number(document.getElementById("blue").value);
+
+      const magentaAmount =
+        Number(document.getElementById("magenta").value);
+
+      for (let i = 0; i < data.length; i += 4) {
+
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+
+        const brightness = (r + g + b) / 3;
+
+        const redFactor =
+          Math.max(
+            0,
+            (r - g * 0.5 - b * 0.5) / 255
+          );
+
+        const greenFactor =
+          Math.max(
+            0,
+            (g - r * 0.5 - b * 0.5) / 255
+          );
+
+        const blueFactor =
+          Math.max(
+            0,
+            (b - r * 0.5 - g * 0.5) / 255
+          );
+
+        const yellowFactor =
+          Math.max(
+            0,
+            (Math.min(r, g) - b) / 255
+          );
+
+        const cyanFactor =
+          Math.max(
+            0,
+            (Math.min(g, b) - r) / 255
+          );
+
+        const magentaFactor =
+          Math.max(
+            0,
+            (Math.min(r, b) - g) / 255
+          );
+
+        r += redAmount * redFactor;
+        g += redAmount * redFactor * 0.2;
+
+        r += yellowAmount * yellowFactor * 0.8;
+        g += yellowAmount * yellowFactor * 0.8;
+        b -= yellowAmount * yellowFactor * 0.5;
+
+        g += greenAmount * greenFactor;
+        r -= greenAmount * greenFactor * 0.15;
+
+        g += cyanAmount * cyanFactor * 0.7;
+        b += cyanAmount * cyanFactor * 0.7;
+        r -= cyanAmount * cyanFactor * 0.6;
+
+        b += blueAmount * blueFactor;
+        r -= blueAmount * blueFactor * 0.15;
+
+        r += magentaAmount * magentaFactor * 0.7;
+        b += magentaAmount * magentaFactor * 0.7;
+        g -= magentaAmount * magentaFactor * 0.5;
+
+        data[i] = clamp(r);
+        data[i + 1] = clamp(g);
+        data[i + 2] = clamp(b);
+      }
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+    }
+
+    function resetImage() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      colors.forEach(function(color) {
+
+        document.getElementById(color).value = 0;
+
+        document.getElementById(
+          color + "Value"
+        ).textContent = "0";
+
+      });
+
+    }
+
+    function downloadImage() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "toolsarthi-selective-color.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+    }
+
+  </script>
+
+</body>
+  </html>
