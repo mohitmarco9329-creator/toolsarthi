@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image RGB Split Effect - ToolSarthi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      color: #222;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 80%;
+      max-width: 450px;
+    }
+
+    .value {
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .apply {
+      background: #222;
+      color: white;
+    }
+
+    .reset {
+      background: #ddd;
+    }
+
+    .download {
+      background: #198754;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .info {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🌈 Image RGB Split Effect</h1>
+
+    <p>
+      Create a colorful RGB split and chromatic aberration effect on your photos.
+    </p>
+
+    <input type="file" id="upload" accept="image/*">
+
+    <div class="control">
+      <label>
+        RGB Split Amount:
+        <span class="value" id="splitValue">12px</span>
+      </label>
+
+      <input
+        type="range"
+        id="splitSlider"
+        min="1"
+        max="50"
+        value="12"
+      >
+    </div>
+
+    <div class="control">
+      <label>
+        Effect Strength:
+        <span class="value" id="strengthValue">100%</span>
+      </label>
+
+      <input
+        type="range"
+        id="strengthSlider"
+        min="20"
+        max="100"
+        value="100"
+      >
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div>
+      <button class="apply" onclick="applyEffect()">
+        Apply RGB Split
+      </button>
+
+      <button class="reset" onclick="resetImage()">
+        Reset
+      </button>
+
+      <button class="download" onclick="downloadImage()">
+        Download Image
+      </button>
+    </div>
+
+    <div class="info">
+      Tip: Split Amount badhane par RGB colors ka separation zyada strong hoga.
+    </div>
+
+  </div>
+
+  <script>
+    const upload = document.getElementById("upload");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const splitSlider = document.getElementById("splitSlider");
+    const strengthSlider = document.getElementById("strengthSlider");
+
+    const splitValue = document.getElementById("splitValue");
+    const strengthValue = document.getElementById("strengthValue");
+
+    let originalImage = null;
+
+    splitSlider.addEventListener("input", function() {
+      splitValue.textContent = this.value + "px";
+    });
+
+    strengthSlider.addEventListener("input", function() {
+      strengthValue.textContent = this.value + "%";
+    });
+
+    upload.addEventListener("change", function(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const img = new Image();
+
+      img.onload = function() {
+
+        originalImage = img;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          img,
+          0,
+          0
+        );
+
+        canvas.style.display = "block";
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+
+    function applyEffect() {
+
+      if (!originalImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const split = Number(splitSlider.value);
+      const strength = Number(strengthSlider.value) / 100;
+
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+      const originalData = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const outputData = ctx.createImageData(
+        canvas.width,
+        canvas.height
+      );
+
+      const source = originalData.data;
+      const output = outputData.data;
+
+      const width = canvas.width;
+      const height = canvas.height;
+
+      for (let y = 0; y < height; y++) {
+
+        for (let x = 0; x < width; x++) {
+
+          const index = (y * width + x) * 4;
+
+          const redX = Math.min(
+            width - 1,
+            Math.max(0, x + split)
+          );
+
+          const blueX = Math.min(
+            width - 1,
+            Math.max(0, x - split)
+          );
+
+          const redIndex =
+            (y * width + redX) * 4;
+
+          const blueIndex =
+            (y * width + blueX) * 4;
+
+          const originalRed = source[index];
+          const originalGreen = source[index + 1];
+          const originalBlue = source[index + 2];
+
+          const shiftedRed = source[redIndex];
+          const shiftedBlue = source[blueIndex + 2];
+
+          output[index] =
+            originalRed * (1 - strength) +
+            shiftedRed * strength;
+
+          output[index + 1] =
+            originalGreen;
+
+          output[index + 2] =
+            originalBlue * (1 - strength) +
+            shiftedBlue * strength;
+
+          output[index + 3] =
+            source[index + 3];
+        }
+      }
+
+      ctx.putImageData(
+        outputData,
+        0,
+        0
+      );
+    }
+
+    function resetImage() {
+
+      if (!originalImage) return;
+
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+    }
+
+    function downloadImage() {
+
+      if (!originalImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const link = document.createElement("a");
+
+      link.download = "rgb-split-image.png";
+
+      link.href = canvas.toDataURL(
+        "image/png"
+      );
+
+      link.click();
+    }
+  </script>
+
+</body>
+  </html>
