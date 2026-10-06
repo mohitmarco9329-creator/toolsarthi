@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Colorize Effect - ToolSarthi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      color: #222;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 15px;
+      width: 230px;
+    }
+
+    input[type="range"] {
+      width: 80%;
+      max-width: 450px;
+    }
+
+    .value {
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .apply {
+      background: #222;
+      color: white;
+    }
+
+    .reset {
+      background: #ddd;
+    }
+
+    .download {
+      background: #198754;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .info {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎨 Image Colorize Effect</h1>
+
+    <p>
+      Add beautiful color tones to your photos with an easy colorize effect.
+    </p>
+
+    <input type="file" id="upload" accept="image/*">
+
+    <div class="control">
+
+      <label>Choose Color Tone:</label>
+
+      <select id="toneSelect">
+
+        <option value="warm">
+          Warm
+        </option>
+
+        <option value="cool">
+          Cool
+        </option>
+
+        <option value="sepia">
+          Sepia
+        </option>
+
+        <option value="blue">
+          Blue
+        </option>
+
+        <option value="purple">
+          Purple
+        </option>
+
+        <option value="green">
+          Green
+        </option>
+
+        <option value="pink">
+          Pink
+        </option>
+
+        <option value="cyan">
+          Cyan
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="control">
+
+      <label>
+        Color Strength:
+        <span class="value" id="strengthValue">70%</span>
+      </label>
+
+      <input
+        type="range"
+        id="strengthSlider"
+        min="0"
+        max="100"
+        value="70"
+      >
+
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div>
+
+      <button class="apply" onclick="applyColorize()">
+        Apply Colorize
+      </button>
+
+      <button class="reset" onclick="resetImage()">
+        Reset
+      </button>
+
+      <button class="download" onclick="downloadImage()">
+        Download Image
+      </button>
+
+    </div>
+
+    <div class="info">
+      Tip: Strength badhane par selected color tone zyada strong hoga.
+    </div>
+
+  </div>
+
+  <script>
+
+    const upload =
+      document.getElementById("upload");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const toneSelect =
+      document.getElementById("toneSelect");
+
+    const strengthSlider =
+      document.getElementById("strengthSlider");
+
+    const strengthValue =
+      document.getElementById("strengthValue");
+
+    let originalImage = null;
+
+
+    strengthSlider.addEventListener(
+      "input",
+      function() {
+
+        strengthValue.textContent =
+          this.value + "%";
+
+      }
+    );
+
+
+    upload.addEventListener(
+      "change",
+      function(event) {
+
+        const file =
+          event.target.files[0];
+
+        if (!file) return;
+
+        const img =
+          new Image();
+
+        img.onload = function() {
+
+          originalImage = img;
+
+          canvas.width =
+            img.width;
+
+          canvas.height =
+            img.height;
+
+          ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          ctx.drawImage(
+            img,
+            0,
+            0
+          );
+
+          canvas.style.display =
+            "block";
+
+        };
+
+        img.src =
+          URL.createObjectURL(file);
+
+      }
+    );
+
+
+    const tones = {
+
+      warm: {
+        r: 255,
+        g: 150,
+        b: 80
+      },
+
+      cool: {
+        r: 80,
+        g: 160,
+        b: 255
+      },
+
+      sepia: {
+        r: 180,
+        g: 120,
+        b: 60
+      },
+
+      blue: {
+        r: 50,
+        g: 100,
+        b: 255
+      },
+
+      purple: {
+        r: 180,
+        g: 70,
+        b: 230
+      },
+
+      green: {
+        r: 60,
+        g: 190,
+        b: 100
+      },
+
+      pink: {
+        r: 240,
+        g: 80,
+        b: 160
+      },
+
+      cyan: {
+        r: 50,
+        g: 210,
+        b: 220
+      }
+
+    };
+
+
+    function applyColorize() {
+
+      if (!originalImage) {
+
+        alert(
+          "Please upload an image first."
+        );
+
+        return;
+      }
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data =
+        imageData.data;
+
+      const tone =
+        tones[toneSelect.value];
+
+      const strength =
+        Number(
+          strengthSlider.value
+        ) / 100;
+
+
+      for (
+        let i = 0;
+        i < data.length;
+        i += 4
+      ) {
+
+        const r =
+          data[i];
+
+        const g =
+          data[i + 1];
+
+        const b =
+          data[i + 2];
+
+
+        const gray =
+          0.299 * r +
+          0.587 * g +
+          0.114 * b;
+
+
+        const toneR =
+          gray * (tone.r / 255);
+
+        const toneG =
+          gray * (tone.g / 255);
+
+        const toneB =
+          gray * (tone.b / 255);
+
+
+        data[i] =
+          r * (1 - strength) +
+          toneR * strength;
+
+        data[i + 1] =
+          g * (1 - strength) +
+          toneG * strength;
+
+        data[i + 2] =
+          b * (1 - strength) +
+          toneB * strength;
+
+      }
+
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+
+    }
+
+
+    function resetImage() {
+
+      if (!originalImage) return;
+
+      canvas.width =
+        originalImage.width;
+
+      canvas.height =
+        originalImage.height;
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0
+      );
+
+    }
+
+
+    function downloadImage() {
+
+      if (!originalImage) {
+
+        alert(
+          "Please upload an image first."
+        );
+
+        return;
+      }
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "colorized-image.png";
+
+      link.href =
+        canvas.toDataURL(
+          "image/png"
+        );
+
+      link.click();
+
+    }
+
+  </script>
+
+</body>
+  </html>
