@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Color Balance Adjuster - ToolSarthi</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .control {
+      margin: 20px 0;
+    }
+
+    input[type="range"] {
+      width: 80%;
+    }
+
+    .value {
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    button {
+      border: none;
+      padding: 12px 20px;
+      margin: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      background: #222;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .download {
+      background: #198754;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎚️ Image Color Balance Adjuster</h1>
+
+    <p>
+      Adjust Red, Green and Blue color channels of your photos.
+    </p>
+
+    <input type="file" id="upload" accept="image/*">
+
+    <div class="control">
+      <label>
+        🔴 Red:
+        <span class="value" id="redValue">0</span>
+      </label>
+
+      <br><br>
+
+      <input
+        type="range"
+        id="red"
+        min="-100"
+        max="100"
+        value="0"
+      >
+    </div>
+
+    <div class="control">
+      <label>
+        🟢 Green:
+        <span class="value" id="greenValue">0</span>
+      </label>
+
+      <br><br>
+
+      <input
+        type="range"
+        id="green"
+        min="-100"
+        max="100"
+        value="0"
+      >
+    </div>
+
+    <div class="control">
+      <label>
+        🔵 Blue:
+        <span class="value" id="blueValue">0</span>
+      </label>
+
+      <br><br>
+
+      <input
+        type="range"
+        id="blue"
+        min="-100"
+        max="100"
+        value="0"
+      >
+    </div>
+
+    <div>
+
+      <button onclick="applyBalance()">
+        Apply Effect
+      </button>
+
+      <button onclick="resetImage()">
+        Reset
+      </button>
+
+      <button class="download" onclick="downloadImage()">
+        Download
+      </button>
+
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+  </div>
+
+  <script>
+
+    const upload =
+      document.getElementById("upload");
+
+    const canvas =
+      document.getElementById("canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const red =
+      document.getElementById("red");
+
+    const green =
+      document.getElementById("green");
+
+    const blue =
+      document.getElementById("blue");
+
+    const redValue =
+      document.getElementById("redValue");
+
+    const greenValue =
+      document.getElementById("greenValue");
+
+    const blueValue =
+      document.getElementById("blueValue");
+
+    let originalImage = null;
+
+    red.addEventListener("input", function() {
+      redValue.textContent = this.value;
+    });
+
+    green.addEventListener("input", function() {
+      greenValue.textContent = this.value;
+    });
+
+    blue.addEventListener("input", function() {
+      blueValue.textContent = this.value;
+    });
+
+    upload.addEventListener("change", function(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const img = new Image();
+
+      img.onload = function() {
+
+        originalImage = img;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        canvas.style.display = "block";
+      };
+
+      img.src = URL.createObjectURL(file);
+
+    });
+
+    function applyBalance() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const imageData =
+        ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+      const data = imageData.data;
+
+      const redAmount =
+        Number(red.value) * 2.55;
+
+      const greenAmount =
+        Number(green.value) * 2.55;
+
+      const blueAmount =
+        Number(blue.value) * 2.55;
+
+      for (let i = 0; i < data.length; i += 4) {
+
+        data[i] =
+          Math.max(
+            0,
+            Math.min(
+              255,
+              data[i] + redAmount
+            )
+          );
+
+        data[i + 1] =
+          Math.max(
+            0,
+            Math.min(
+              255,
+              data[i + 1] + greenAmount
+            )
+          );
+
+        data[i + 2] =
+          Math.max(
+            0,
+            Math.min(
+              255,
+              data[i + 2] + blueAmount
+            )
+          );
+      }
+
+      ctx.putImageData(
+        imageData,
+        0,
+        0
+      );
+    }
+
+    function resetImage() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      red.value = 0;
+      green.value = 0;
+      blue.value = 0;
+
+      redValue.textContent = "0";
+      greenValue.textContent = "0";
+      blueValue.textContent = "0";
+    }
+
+    function downloadImage() {
+
+      if (!originalImage) {
+
+        alert("Please upload an image first.");
+
+        return;
+      }
+
+      const link =
+        document.createElement("a");
+
+      link.download =
+        "toolsarthi-color-balance.png";
+
+      link.href =
+        canvas.toDataURL("image/png");
+
+      link.click();
+    }
+
+  </script>
+
+</body>
+        </html>
